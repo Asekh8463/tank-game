@@ -14,11 +14,13 @@ class tank
 	void stop();
 	void rocketstop();
 	void goback();
+	void telrocket();
 	void keepmovin(tile* tiles[]);
 	tank();
 	void handleEvent(SDL_Event &e, tile* tiles[]);
 	void move(tile* tiles[]);
 	void render();
+	void updn();
 	private:
 	int mPosX, mPosY;
 	int rPosX, rPosY;
