@@ -1,7 +1,8 @@
 //TODO:
-//rocket explosion rect
+//mine lives
 /*later*/
 //level selection
+//refresh tilemap to reflect file
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -42,8 +43,6 @@ SDL_Rect rect1b;
 SDL_Rect rect1c;
 SDL_Rect rect1d;
 SDL_Rect rocketrect;
-SDL_Rect exprect;
-
 
 SDL_Rect mMine1 = {f,10*f,f,f};
 
@@ -75,6 +74,7 @@ bool iswall(SDL_Rect input1, tile* tiles[]);
 bool isteleport1(SDL_Rect input2, tile* tiles[]);
 bool ismine(SDL_Rect input3, tile* tiles[]);
 bool reachedend(SDL_Rect input4, tile* tiles[]);
+bool canbreak(SDL_Rect input5, tile* tiles[]);
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -90,6 +90,26 @@ aTexture MINE;
 aTexture RFY;
 aTexture RFN;
 SDL_Rect tileclips[7];
+
+void frtile(tile *tiles[])
+{
+	const char r = '2';
+	int lne = ((rocketrect.x/f)*3)+1;
+	int lnp = (rocketrect.y/f)+1;
+	int pos;
+	fstream mapFile("map.map");
+	if(rocketfired)
+	{
+		if(canbreak(rocketrect, tiles))
+		{
+			pos = (82*(lnp-1))+lne;
+			mapFile.seekp(pos, ios::beg); //go to wherever
+			cout << pos << endl;
+			mapFile << r;
+		}
+	}
+	mapFile.close();
+}
 
 int readmapy()
 {
@@ -176,8 +196,6 @@ void tank::goback()
 	mMine1.x = f;
 	mMine1.y = 10*f;
 	pointing = 0.0;
-	exprect.x = startx-f;
-	exprect.y = starty-f;
 	rocketstop();
 }
 
@@ -187,8 +205,6 @@ void tank::telrocket()
 	rPosY = telexit.y;
 	rocketrect.x = rPosX;
 	rocketrect.y = rPosY;
-	exprect.x = telexit.x-f;
-	exprect.y = telexit.y-f;
 }
 
 aTexture::aTexture()
@@ -310,21 +326,17 @@ tank::tank()
 	rect1d.y = starty+f;
 	rect1d.w = f;
 	rect1d.h = 1;
-	rPosX = mPosX;
+	rPosX = startx;
 	rPosY = starty;
 	//setting rects start pos
-	rocketrect.x = mPosX;
-	rocketrect.y = mPosY;
+	rocketrect.x = startx;
+	rocketrect.y = starty;
 	rocketrect.w = f;
 	rocketrect.h = f;
 	sprite1.x=mPosX;
 	sprite1.y=mPosY;
 	sprite1.w=f;
 	sprite1.h=f;
-	exprect.x = mPosX-f;
-	exprect.y = mPosY-f;
-	exprect.w = 3*f;
-	exprect.h = 3*f;
 }
 
 void tank::updn()
@@ -366,9 +378,17 @@ void tank::keepmovin(tile* tiles[])
 		{
 			rPosY=rPosY+f;
 			rocketrect.y=rocketrect.y+f;
-			exprect.y=exprect.y+f;
-			if(iswall(rocketrect,tiles))
+			if(canbreak(rocketrect,tiles))
 			{
+				frtile(tileset);
+				goback();
+			}
+			else if(iswall(rocketrect,tiles))
+			{
+				if(colliding)
+				{
+					goback();
+				}
 				rocketstop();
 			}
 			else if(isteleport1(rocketrect, tiles))
@@ -376,22 +396,28 @@ void tank::keepmovin(tile* tiles[])
 				telrocket();
 				rPosY=rPosY+f;
 				rocketrect.y=rocketrect.y+f;
-				exprect.y=exprect.y+f;
 			}
 			else
 			{
 				rPosY=rPosY+f;
 				rocketrect.y=rocketrect.y+f;
-				exprect.y=exprect.y+f;
 			}
 		}
 		if(pointing1==-90) //right
 		{
 			rPosX=rPosX+f;
 			rocketrect.x=rocketrect.x+f;
-			exprect.x=exprect.x+f;
-			if(iswall(rocketrect,tiles))
+			if(canbreak(rocketrect,tiles))
 			{
+				frtile(tileset);
+				goback();
+			}
+			else if(iswall(rocketrect,tiles))
+			{
+				if(colliding)
+				{
+					goback();
+				}
 				rocketstop();
 			}
 			else if(isteleport1(rocketrect, tiles))
@@ -399,22 +425,28 @@ void tank::keepmovin(tile* tiles[])
 				telrocket();
 				rPosX=rPosX+f;
 				rocketrect.x=rocketrect.x+f;
-				exprect.x=exprect.x+f;
 			}
 			else
 			{
 				rPosX=rPosX+f;
 				rocketrect.x=rocketrect.x+f;
-				exprect.x=exprect.x+f;
 			}
 		}
 		if(pointing1==180)//up
 		{
 			rPosY=rPosY-f;
 			rocketrect.y=rocketrect.y-f;
-			exprect.y=exprect.y-f;
-			if(iswall(rocketrect,tiles))
+			if(canbreak(rocketrect,tiles))
 			{
+				frtile(tileset);
+				goback();
+			}
+			else if(iswall(rocketrect,tiles))
+			{
+				if(colliding)
+				{
+					goback();
+				}
 				rocketstop();
 			}
 			else if(isteleport1(rocketrect, tiles))
@@ -422,22 +454,28 @@ void tank::keepmovin(tile* tiles[])
 				telrocket();
 				rPosY=rPosY-f;
 				rocketrect.y=rocketrect.y-f;
-				exprect.y=exprect.y-f;
 			}
 			else
 			{
 				rPosY=rPosY-f;
 				rocketrect.y=rocketrect.y-f;
-				exprect.y=exprect.y-f;
 			}
 		}
 		if(pointing1==90) //left
 		{
 			rPosX=rPosX-f;
 			rocketrect.x=rocketrect.x-f;
-			exprect.x=exprect.x-f;
-			if(iswall(rocketrect,tiles))
+			if(canbreak(rocketrect,tiles))
 			{
+				frtile(tileset);
+				goback();
+			}
+			else if(iswall(rocketrect,tiles))
+			{
+				if(colliding)
+				{
+					goback();
+				}
 				rocketstop();
 			}
 			else if(isteleport1(rocketrect, tiles))
@@ -445,13 +483,11 @@ void tank::keepmovin(tile* tiles[])
 				telrocket();
 				rPosX=rPosX-f;
 				rocketrect.x=rocketrect.x-f;
-				exprect.x=exprect.x-f;
 			}
 			else
 			{
 				rPosX=rPosX-f;
 				rocketrect.x=rocketrect.x-f;
-				exprect.x=exprect.x-f;
 			}
 		}
 	}
@@ -461,8 +497,6 @@ void tank::keepmovin(tile* tiles[])
 		rPosY=mPosY;
 		rocketrect.x = rPosX;
 		rocketrect.y = rPosY;
-		exprect.x = rPosX-f;
-		exprect.y = rPosY-f;
 	}
 	if(colliding)
 	{
@@ -472,7 +506,6 @@ void tank::keepmovin(tile* tiles[])
 
 void tank::handleEvent(SDL_Event &e, tile* tiles[])
 {
-	SDL_bool collidin = SDL_HasIntersection(&sprite1,&exprect);
 	if(e.type == SDL_KEYDOWN && e.key.repeat == 0)
 	{
 		switch(e.key.keysym.sym)
@@ -497,10 +530,6 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					rect1c.y = rect1c.y-f;
 					rect1d.y = rect1d.y-f;
 					sprite1.y = sprite1.y-f;
-					if(!rocketfired)
-					{
-						exprect.y=exprect.y-f;
-					}
 					pointing = 180;
 					keepmovin(tileset);
 					updn();
@@ -528,10 +557,6 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					rect1c.y = rect1c.y+f;
 					rect1d.y = rect1d.y+f;
 					sprite1.y = sprite1.y+f;
-					if(!rocketfired)
-					{
-						exprect.y=exprect.y+f;
-					}
 					pointing = 0;
 					keepmovin(tileset);
 					updn();
@@ -558,10 +583,6 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					rect1c.x = rect1c.x-f;
 					rect1d.x = rect1d.x-f;
 					sprite1.x = sprite1.x-f;
-					if(!rocketfired)
-					{
-						exprect.x=exprect.x-f;
-					}
 					pointing = 90;
 					keepmovin(tileset);
 					updn();
@@ -588,10 +609,6 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					rect1c.x = rect1c.x+f;
 					rect1d.x = rect1d.x+f;
 					sprite1.x = sprite1.x+f;
-					if(!rocketfired)
-					{
-						exprect.x=exprect.x+f;
-					}
 					pointing = -90;
 					keepmovin(tileset);
 					updn();
@@ -599,36 +616,34 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 			}
 			break;
 			case SDLK_SPACE:
-			nM++;
 			if(!rocketfired)
 			{
+				nM++;
 				rocketfired = true;
 				if(pointing == 0) //facing down
 				{
 					pointing1 = 0;
 					rPosY = rPosY+f;
 					rocketrect.y=rocketrect.y+f;
-					exprect.y=exprect.y+f;
-					if(iswall(rocketrect,tiles))
+					if(canbreak(rocketrect,tiles))
 					{
-						if(collidin)
-						{
-							goback();
-						}
-					rocketstop();
+						frtile(tileset);
+						goback();
+					}
+					else if(iswall(rocketrect,tiles))
+					{
+						rocketstop();
 					}
 					else if(isteleport1(rocketrect,tiles))
 					{
 						telrocket();
 						rPosY = rPosY+f;
 						rocketrect.y=rocketrect.y+f;
-						exprect.y=exprect.y+f;
 					}
 					else
 					{
 						rPosY = rPosY+f; //keep moving
 						rocketrect.y=rocketrect.y+f;
-						exprect.y=exprect.y+f;
 					}
 				}
 				else if(pointing == 90) //facing right
@@ -636,13 +651,13 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					pointing1 = 90;
 					rPosX = rPosX-f;
 					rocketrect.x=rocketrect.x-f;
-					exprect.x=exprect.x-f;
-					if(iswall(rocketrect,tiles))
+					if(canbreak(rocketrect,tiles))
 					{
-						if(collidin)
-						{
-							goback();
-						}
+						frtile(tileset);
+						goback();
+					}
+					else if(iswall(rocketrect,tiles))
+					{
 						rocketstop();
 					}
 					else if(isteleport1(rocketrect,tiles))
@@ -650,13 +665,11 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 						telrocket();
 						rPosX = rPosX-f;
 						rocketrect.x=rocketrect.x-f;
-						exprect.x=exprect.x-f;
 					}
 					else
 					{
 						rPosX = rPosX-f; //keep moving
 						rocketrect.x=rocketrect.x-f;
-						exprect.x=exprect.x-f;
 					}
 				}
 				else if(pointing == 180)//facing up
@@ -664,13 +677,13 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					pointing1 = 180;
 					rPosY = rPosY-f;
 					rocketrect.y=rocketrect.y-f;
-					exprect.y=exprect.y-f;
-					if(iswall(rocketrect,tiles))
+					if(canbreak(rocketrect,tiles))
 					{
-						if(collidin)
-						{
-							goback();
-						}
+						frtile(tileset);
+						goback();
+					}
+					else if(iswall(rocketrect,tiles))
+					{
 						rocketstop();
 					}
 					else if(isteleport1(rocketrect,tiles))
@@ -678,13 +691,11 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 						telrocket();
 						rPosY = rPosY-f;
 						rocketrect.y=rocketrect.y-f;
-						exprect.y=exprect.y-f;
 					}
 					else
 					{
 						rPosY = rPosY-f; //keep moving
 						rocketrect.y=rocketrect.y-f;
-						exprect.y=exprect.y-f;
 					}
 				}
 				else //facing left
@@ -692,13 +703,13 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					pointing1 = -90;
 					rPosX = rPosX+f;
 					rocketrect.x=rocketrect.x+f;
-					exprect.x=exprect.x+f;
-					if(iswall(rocketrect,tiles))
+					if(canbreak(rocketrect,tiles))
 					{
-						if(collidin)
-						{
-							goback();
-						}
+						frtile(tileset);
+						goback();
+					}
+					else if(iswall(rocketrect,tiles))
+					{
 						rocketstop();
 					}
 					else if(isteleport1(rocketrect,tiles))
@@ -706,19 +717,18 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 						telrocket();
 						rPosX = rPosX+f;
 						rocketrect.x=rocketrect.x+f;
-						exprect.x= exprect.x+f;
 					}
 					else
 					{
 						rPosX = rPosX+f; //keep moving
 						rocketrect.x=rocketrect.x+f;
-						exprect.x= exprect.x+f;
 					}
 				}
 			}
 			break;
 			case SDLK_r:
 			goback();
+			//reset tilemap somehow
 			break;
 		}
 	}
@@ -798,6 +808,11 @@ void tank::move(tile* tiles[])
 	{
 		rocketstop();
 	}
+	if(canbreak(rocketrect,tiles))
+	{
+		frtile(tileset);
+		goback();
+	}
 	if(isteleport1(sprite1, tiles))
 	{
 		mPosX = telexit.x;
@@ -843,11 +858,11 @@ void tank::render()
 	MINE.render(mMine1.x,mMine1.y,&spriteClips[2],still,NULL,flipType);
 	if(rocketfired)
 	{
-	RFN.render(13*f,0,&spriteClips[4],still,NULL,flipType);
+		RFN.render(13*f,0,&spriteClips[4],still,NULL,flipType);
 	}
 	else
 	{
-	RFY.render(13*f,0,&spriteClips[3],still,NULL,flipType);
+		RFY.render(13*f,0,&spriteClips[3],still,NULL,flipType);
 	}
 }
 
@@ -1115,6 +1130,21 @@ bool iswall(SDL_Rect input1, tile* tiles[])
 	return false;
 }
 
+bool canbreak(SDL_Rect input5, tile* tiles[])
+{
+	for(int i=0;i<noTiles;++i) //go through all the tiles
+    {
+        if((tiles[i]->gType() == 1))
+        {
+            if(checktiles(input5, tiles[i]->gBlock()))
+            {
+				return true; //colliding
+            }
+		}
+	}
+	return false;
+}
+
 bool isteleport1(SDL_Rect input2, tile* tiles[])
 {
 	for(int i=0;i<noTiles;++i) //go through all the tiles
@@ -1184,6 +1214,7 @@ int main(int argc,char* args[])
 				{
 					if(e.type==SDL_QUIT)
 					{
+						//delete the temp tilemap
 						quit = true;
 					}
 					tank.handleEvent(e,tileset);
@@ -1194,6 +1225,7 @@ int main(int argc,char* args[])
 				SDL_SetRenderDrawColor(renderer,0,0,0,255);
 				SDL_RenderClear(renderer);
 				
+				setTiles(tileset);
 				scr.str(" ");
 				int cm = nM;
 				scr << "Moves: " << cm;
@@ -1211,7 +1243,6 @@ int main(int argc,char* args[])
 				scrtext.render(5,5);
 				TEXTure.render(910,5);
 				SDL_SetRenderDrawColor( renderer, 0xFF, 0x00, 0x00, 0xFF );		
-				SDL_RenderDrawRect( renderer, &exprect );
 
 				SDL_RenderPresent(renderer);
 			}
