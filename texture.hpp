@@ -8,6 +8,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "cons.hpp"
+
 class aTexture
 {
 	public:

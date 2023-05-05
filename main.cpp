@@ -1,8 +1,6 @@
-//TODO:
-//mine lives
-/*later*/
+//done!
 //level selection
-//refresh tilemap to reflect file
+//and planning
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -17,21 +15,17 @@
 #include "map.hpp"
 #include "texture.hpp"
 #include "tank.hpp"
+#include "cons.hpp"
+#include "filerw.hpp"
+#include "swit.hpp"
 
 using namespace std;
 
-int level = 1;
-
 const Uint8* state = SDL_GetKeyboardState(nullptr);
 
-int m = -1;
+int cd = findc(53,2)/f;
 int nM = 0;
-const int f = 40;
-const int noTiles = 378;
-const int startx = 25*f;
-const int starty = f;
 
-const double still = 0.0;
 double pointing = 0.0;
 double pointing1 = 0.0;
 
@@ -44,24 +38,22 @@ SDL_Rect rect1c;
 SDL_Rect rect1d;
 SDL_Rect rocketrect;
 
-SDL_Rect mMine1 = {f,10*f,f,f};
+SDL_Rect mMine1 = {findc(11,2),findc(14,2),f,f};
+SDL_Rect mMine2 = {findc(19,2),findc(22,2),f,f};
+SDL_Rect mMine3 = {findc(27,2),findc(30,2),f,f};
+SDL_Rect switc1 = {findc(35,2),findc(38,2),f,f};
+SDL_Rect switc2 = {findc(41,2),findc(44,2),f,f};
+SDL_Rect switc3 = {findc(47,2),findc(50,2),f,f};
+int mx1 = findc(11,2);
+int my1 = findc(14,2);
+int mx2 = findc(19,2);
+int my2 = findc(22,2);
+int mx3 = findc(27,2);
+int my3 = findc(30,2);
 
-//tile types
-const int BREAKABLE = 0;
-const int UNBREAKABLE = 1;
-const int BLANK = 2;
-const int TELEPORTER1a = 3;
-const int TELEPORTER1b = 4;
-const int STATIC_MINE = 5;
-const int EXIT = 6;
-/*const int TELEPORTER2a = 5;
-const int TELEPORTER2b = 6;
-const int TELEPORTER3a = 7;
-const int TELEPORTER3b = 8;
-const int TELEPORTER4a = 9;
-const int TELEPORTER4b = 10;*/
-
-tile* tileset[noTiles];
+SDL_bool mm1 = SDL_HasIntersection(&rocketrect, &mMine1);
+SDL_bool mm2 = SDL_HasIntersection(&rocketrect, &mMine2);
+SDL_bool mm3 = SDL_HasIntersection(&rocketrect, &mMine3);
 
 bool init();
 bool loadMedia(tile *tiles[]);
@@ -70,89 +62,29 @@ void exit(tile *tiles[]);
 bool checktiles(SDL_Rect A, SDL_Rect B);
 
 bool setTiles(tile *tiles[]);
-bool iswall(SDL_Rect input1, tile* tiles[]);
-bool isteleport1(SDL_Rect input2, tile* tiles[]);
-bool ismine(SDL_Rect input3, tile* tiles[]);
-bool reachedend(SDL_Rect input4, tile* tiles[]);
-bool canbreak(SDL_Rect input5, tile* tiles[]);
+bool iswall(SDL_Rect input1, tile* tiles[], int fType);
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 TTF_Font *font = NULL;
 
-SDL_Rect spriteClips[5];
+SDL_Rect spriteClips[10];
 aTexture TANK;
 aTexture TEXTure;
+aTexture TEXTure1;
 aTexture BLOCKS;
 aTexture scrtext;
+aTexture rtext;
 aTexture ROCKET;
 aTexture MINE;
 aTexture RFY;
 aTexture RFN;
-SDL_Rect tileclips[7];
-
-void frtile(tile *tiles[])
-{
-	const char r = '2';
-	int lne = ((rocketrect.x/f)*3)+1;
-	int lnp = (rocketrect.y/f)+1;
-	int pos;
-	fstream mapFile("map.map");
-	if(rocketfired)
-	{
-		if(canbreak(rocketrect, tiles))
-		{
-			pos = (82*(lnp-1))+lne;
-			mapFile.seekp(pos, ios::beg); //go to wherever
-			cout << pos << endl;
-			mapFile << r;
-		}
-	}
-	mapFile.close();
-}
-
-int readmapy()
-{
-	unsigned int wline = 0;
-	int aX = -1;
-	string usc;
-	ifstream mapFile("map.map");
-	while(getline(mapFile, usc))
-	{
-		wline++;
-		if(usc.find("04") != string::npos)
-		{
-			aX = wline;
-		}
-	}
-	mapFile.close();
-	return aX;
-}
-
-int readmapx()
-{
-	int aY;
-	string usc = "04";
-	string datas;
-	ifstream mapFile("map.map");
-	for(int i=1; i <= readmapy(); i++)
-	{
-		getline(mapFile, datas);
-	}
-	size_t loc = datas.find("04");
-	if(loc != string::npos)
-	{
-		aY = loc;
-	}
-	else
-	{
-		aY = -1;
-	}
-	mapFile.close();
-	return aY;
-}
-
-SDL_Rect telexit = {(((readmapx())/3)*f),(readmapy()*f)-f,f,f};
+aTexture ONE;
+aTexture TWON;
+aTexture TWOY;
+aTexture THREEN;
+aTexture THREEY;
+SDL_Rect tileclips[10];
 
 void tank::stop()
 {
@@ -180,6 +112,18 @@ void tank::rocketstop()
 
 void tank::goback()
 {
+/*	if iswall(sprite1,tiles,6)
+	{
+		clevel(nM);
+	}*/
+	clm = 0;
+	clm1 = 0;
+	t1 = false;
+	t2 = false;
+	t3 = false;
+	cc1 = true;
+	cc2 = true;
+	cd = findc(53,2)/f;
 	nM = 0;
 	mPosX=startx;
 	mPosY=starty;
@@ -193,18 +137,60 @@ void tank::goback()
 	rect1c.y = starty-1;
 	rect1d.x = startx;
 	rect1d.y = starty+f;
-	mMine1.x = f;
-	mMine1.y = 10*f;
+	mx1 = findc(11,2);
+	my1 = findc(14,2);
+	mx2 = findc(19,2);
+	my2 = findc(22,2);
+	mx3 = findc(27,2);
+	my3 = findc(30,2);
+	mMine1.x = findc(11,2);
+	mMine1.y = findc(14,2);
+	mMine2.x = findc(19,2);
+	mMine2.y = findc(22,2);
+	mMine3.x = findc(27,2);
+	mMine3.y = findc(30,2);
+	switc1.x = findc(35,2);
+	switc1.y = findc(38,2);
+	switc2.x = findc(41,2);
+	switc2.y = findc(44,2);
+	switc3.x = findc(47,2);
+	switc3.y = findc(50,2);
 	pointing = 0.0;
-	rocketstop();
+	rPosX=startx;
+	rPosY=starty;
+	rocketrect.x=startx;
+	rocketrect.y=starty;
+	reset();
 }
 
-void tank::telrocket()
+void tank::telrocket(SDL_Rect objct,string id)
 {
-	rPosX = telexit.x;
-	rPosY = telexit.y;
-	rocketrect.x = rPosX;
-	rocketrect.y = rPosY;
+	int x11 = readmapx(id);
+	int y11 = readmapy(id);
+	objct.x = x11;
+	objct.y = y11;
+	if((rocketrect.x!=sprite1.x)||(rocketrect.y!=sprite1.y))
+	{
+		if(sprite1.x-rocketrect.x==f||sprite1.y-rocketrect.y==f)
+		{
+			if(pointing1==0) //down
+			{
+				movement(tileset,0,1);
+			}
+			if(pointing1==-90) //right
+			{
+				movement(tileset,1,0);
+			}
+			if(pointing1==180)//up
+			{
+				movement(tileset,0,-1);
+			}
+			if(pointing1==90) //left
+			{
+				movement(tileset,-1,0);
+			}
+		}
+	}
 }
 
 aTexture::aTexture()
@@ -333,162 +319,241 @@ tank::tank()
 	rocketrect.y = starty;
 	rocketrect.w = f;
 	rocketrect.h = f;
-	sprite1.x=mPosX;
-	sprite1.y=mPosY;
+	sprite1.x=startx;
+	sprite1.y=starty;
 	sprite1.w=f;
 	sprite1.h=f;
 }
 
-void tank::updn()
+void tank::updn(tile* tiles[])
 {
-	switch(mMine1.y)
+	if(findc(17,1)!=0)
 	{
-	case 7*f:
-		m=-m;
-		mMine1.y=7*f + (m*f);
-		break;
-	case 8*f:
-		mMine1.y=8*f + (m*f);
-		break;
-	case 9*f:
-		mMine1.y=9*f + (m*f);
-		break;
-	case 10*f:
-		mMine1.y=10*f + (m*f);
-		break;
-	case 11*f:
-		mMine1.y=11*f + (m*f);
-		break;
-	case 12*f:
-		mMine1.y=12*f + (m*f);
-		break;
-	case 13*f:
-		m=-m;
-		mMine1.y=13*f + (m*f);
-		break;
+		switch(findc(17,1))
+		{
+			case 40:
+			if(mMine1.y == my1-4*f || mMine1.y == my1+4*f)
+			{
+				m = -m;
+			}
+			mMine1.y=mMine1.y+(m*f);
+				if(iswall(mMine1,tiles,5)||iswall(mMine1,tiles,1))
+				{
+					frtile(tileset,'2',mMine1.x,mMine1.y);
+				}
+				if(iswall(mMine1,tiles,3))
+				{
+					telrocket(mMine1,"04");
+				}
+				if(iswall(mMine1,tiles,7))
+				{
+					telrocket(mMine1,"08");
+				}
+			break;
+			case 80:
+			if(mMine1.x == mx1-4*f || mMine1.x == mx1+4*f)
+			{
+				m = -m;
+			}
+			mMine1.x=mMine1.x+(m*f);
+				if(iswall(mMine1,tiles,5)||iswall(mMine1,tiles,1))
+				{
+					frtile(tileset,'2',mMine1.x,mMine1.y);
+				}
+				if(iswall(mMine1,tiles,3))
+				{
+					telrocket(mMine1,"04");
+				}
+				if(iswall(mMine1,tiles,7))
+				{
+					telrocket(mMine1,"08");
+				}
+			break;
+		}
+	}
+	if(findc(25,1)!=0)
+	{
+		switch(findc(25,1))
+		{
+			case 40:
+			if(mMine2.y == my2-4*f || mMine2.y == my2+4*f)
+			{
+				m1 = -m1;
+			}
+			mMine2.y=mMine2.y+(m*f);
+			if(iswall(mMine2,tiles,5)||iswall(mMine2,tiles,1))
+			{
+				frtile(tileset,'2',mMine2.x,mMine2.y);
+			}
+			if(iswall(mMine2,tiles,3))
+			{
+				telrocket(mMine2,"04");
+			}
+			if(iswall(mMine2,tiles,7))
+			{
+				telrocket(mMine2,"08");
+			}
+
+			break;
+			case 80:
+			if(mMine2.x == mx2-4*f || mMine2.x == mx2+4*f)
+			{
+				m1 = -m1;
+			}
+			mMine2.x=mMine2.x+(m*f);
+			if(iswall(mMine2,tiles,5)||iswall(mMine2,tiles,1))
+			{
+				frtile(tileset,'2',mMine2.x,mMine2.y);
+			}
+			if(iswall(mMine2,tiles,3))
+			{
+				telrocket(mMine2,"04");
+			}
+			if(iswall(mMine2,tiles,7))
+			{
+				telrocket(mMine2,"08");
+			}
+			break;
+		}
+	}
+	if(findc(33,1)!=0)
+	{
+		switch(findc(33,1))
+		{
+			case 40:
+			if(mMine3.y == my3-4*f || mMine3.y == my3+4*f)
+			{
+				m2 = -m2;
+			}
+			mMine3.y=mMine3.y+(m*f);
+			if(iswall(mMine3,tiles,5)||iswall(mMine3,tiles,1))
+			{
+				frtile(tileset,'2',mMine3.x,mMine3.y);
+			}
+			if(iswall(mMine3,tiles,3))
+			{
+				telrocket(mMine3,"04");
+			}
+			if(iswall(mMine3,tiles,7))
+			{
+				telrocket(mMine3,"08");
+			}
+			break;
+			case 80:
+			if(mMine3.x == mx3-4*f || mMine3.x == mx3+4*f)
+			{
+				m2 = -m2;
+			}
+			mMine3.x=mMine3.x+(m*f);
+			if(iswall(mMine3,tiles,5)||iswall(mMine3,tiles,1))
+			{
+				frtile(tileset,'2',mMine3.x,mMine3.y);
+			}
+			if(iswall(mMine3,tiles,3))
+			{
+				telrocket(mMine3,"04");
+			}
+			if(iswall(mMine3,tiles,7))
+			{
+				telrocket(mMine3,"08");
+			}
+			break;
+		}
+	}
+}
+
+void tank::movement(tile* tiles[],int lx,int ly)
+{
+	if(iswall(rocketrect,tiles,0)||mm1||mm2||mm3)
+	{
+		rocketstop();
+	}
+	else if(iswall(rocketrect,tiles,5)||iswall(rocketrect,tiles,1))
+	{
+		if(cd>0)
+		{
+			frtile(tileset,'2',rocketrect.x,rocketrect.y);
+			--cd;
+		}
+		else
+		{
+			rocketstop();
+		}
+	}
+	else if(iswall(rocketrect,tiles,9))
+	{
+		rocketstop();
+		goback();
+	}
+	else if(iswall(rocketrect,tiles,3))
+	{
+		telrocket(rocketrect,"04");
+	}
+	else if(iswall(rocketrect,tiles,7))
+	{
+		telrocket(rocketrect,"08");
+	}
+	else
+	{
+		rPosY=(ly*f)+rPosY;
+		rPosX=(lx*f)+rPosX;
+		rocketrect.y=(ly*f)+rocketrect.y;
+		rocketrect.x=(lx*f)+rocketrect.x;
+		if(iswall(rocketrect,tiles,0)||mm1||mm2||mm3)
+		{
+			rocketstop();
+		}
+		if(iswall(rocketrect,tiles,7))
+		{
+			telrocket(rocketrect,"08");
+		}
+		if(iswall(rocketrect,tiles,3))
+		{
+			telrocket(rocketrect,"04");
+		}
+		if(iswall(rocketrect,tiles,5)||iswall(rocketrect,tiles,1))
+		{
+			if(cd>0)
+			{
+				frtile(tileset,'2',rocketrect.x,rocketrect.y);
+				--cd;
+			}
+			else
+			{
+				rocketstop();
+			}
+		}
+		if(iswall(rocketrect,tiles,9))
+		{
+			rocketstop();
+			goback();
+		}
 	}
 }
 
 void tank::keepmovin(tile* tiles[])
 {
-	SDL_bool colliding = SDL_HasIntersection(&mMine1,&sprite1);
 	if(rocketfired==true)
 	{
 		if(pointing1==0) //down
 		{
-			rPosY=rPosY+f;
-			rocketrect.y=rocketrect.y+f;
-			if(canbreak(rocketrect,tiles))
-			{
-				frtile(tileset);
-				goback();
-			}
-			else if(iswall(rocketrect,tiles))
-			{
-				if(colliding)
-				{
-					goback();
-				}
-				rocketstop();
-			}
-			else if(isteleport1(rocketrect, tiles))
-			{
-				telrocket();
-				rPosY=rPosY+f;
-				rocketrect.y=rocketrect.y+f;
-			}
-			else
-			{
-				rPosY=rPosY+f;
-				rocketrect.y=rocketrect.y+f;
-			}
+			movement(tileset,0,1);
+			movement(tileset,0,1);
 		}
 		if(pointing1==-90) //right
 		{
-			rPosX=rPosX+f;
-			rocketrect.x=rocketrect.x+f;
-			if(canbreak(rocketrect,tiles))
-			{
-				frtile(tileset);
-				goback();
-			}
-			else if(iswall(rocketrect,tiles))
-			{
-				if(colliding)
-				{
-					goback();
-				}
-				rocketstop();
-			}
-			else if(isteleport1(rocketrect, tiles))
-			{
-				telrocket();
-				rPosX=rPosX+f;
-				rocketrect.x=rocketrect.x+f;
-			}
-			else
-			{
-				rPosX=rPosX+f;
-				rocketrect.x=rocketrect.x+f;
-			}
+			movement(tileset,1,0);
+			movement(tileset,1,0);
 		}
 		if(pointing1==180)//up
 		{
-			rPosY=rPosY-f;
-			rocketrect.y=rocketrect.y-f;
-			if(canbreak(rocketrect,tiles))
-			{
-				frtile(tileset);
-				goback();
-			}
-			else if(iswall(rocketrect,tiles))
-			{
-				if(colliding)
-				{
-					goback();
-				}
-				rocketstop();
-			}
-			else if(isteleport1(rocketrect, tiles))
-			{
-				telrocket();
-				rPosY=rPosY-f;
-				rocketrect.y=rocketrect.y-f;
-			}
-			else
-			{
-				rPosY=rPosY-f;
-				rocketrect.y=rocketrect.y-f;
-			}
+			movement(tileset,0,-1);
+			movement(tileset,0,-1);
 		}
 		if(pointing1==90) //left
 		{
-			rPosX=rPosX-f;
-			rocketrect.x=rocketrect.x-f;
-			if(canbreak(rocketrect,tiles))
-			{
-				frtile(tileset);
-				goback();
-			}
-			else if(iswall(rocketrect,tiles))
-			{
-				if(colliding)
-				{
-					goback();
-				}
-				rocketstop();
-			}
-			else if(isteleport1(rocketrect, tiles))
-			{
-				telrocket();
-				rPosX=rPosX-f;
-				rocketrect.x=rocketrect.x-f;
-			}
-			else
-			{
-				rPosX=rPosX-f;
-				rocketrect.x=rocketrect.x-f;
-			}
+			movement(tileset,-1,0);
+			movement(tileset,-1,0);
 		}
 	}
 	else
@@ -497,10 +562,6 @@ void tank::keepmovin(tile* tiles[])
 		rPosY=mPosY;
 		rocketrect.x = rPosX;
 		rocketrect.y = rPosY;
-	}
-	if(colliding)
-	{
-		goback();
 	}
 }
 
@@ -513,7 +574,7 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 			case SDLK_UP:
 			if(!(state[SDL_SCANCODE_LEFT]) && !(state[SDL_SCANCODE_RIGHT]) && !(state[SDL_SCANCODE_DOWN]))
 			{
-				if(iswall(rect1c,tiles))
+				if(iswall(rect1c,tiles,0)||iswall(rect1c,tiles,1))
 				{
 					mPosY = mPosY;
 					rect1a.y = mPosY;
@@ -532,14 +593,14 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					sprite1.y = sprite1.y-f;
 					pointing = 180;
 					keepmovin(tileset);
-					updn();
+					updn(tileset);
 				}
 			}
 			break;
 			case SDLK_DOWN:
 			if(!(state[SDL_SCANCODE_LEFT]) && !(state[SDL_SCANCODE_RIGHT]) && !(state[SDL_SCANCODE_UP]))
 			{
-				if(iswall(rect1d,tiles))
+				if(iswall(rect1d,tiles,0)||iswall(rect1d,tiles,1))
 				{
 					mPosY = mPosY;
 					rect1a.y = mPosY;
@@ -559,14 +620,14 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					sprite1.y = sprite1.y+f;
 					pointing = 0;
 					keepmovin(tileset);
-					updn();
+					updn(tileset);
 				}
 			}
 			break;
 			case SDLK_LEFT:
 			if(!(state[SDL_SCANCODE_UP]) && !(state[SDL_SCANCODE_RIGHT]) && !(state[SDL_SCANCODE_DOWN]))
 			{
-				if(iswall(rect1a,tiles))
+				if(iswall(rect1a,tiles,0)||iswall(rect1a,tiles,1))
 				{
 					mPosX = mPosX;
 					rect1a.x = mPosX-1;
@@ -585,14 +646,14 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					sprite1.x = sprite1.x-f;
 					pointing = 90;
 					keepmovin(tileset);
-					updn();
+					updn(tileset);
 				}
 			}
 			break;
 			case SDLK_RIGHT:
 			if(!(state[SDL_SCANCODE_LEFT]) && !(state[SDL_SCANCODE_UP]) && !(state[SDL_SCANCODE_DOWN]))
 			{
-				if(iswall(rect1b,tiles))
+				if(iswall(rect1b,tiles,0)||iswall(rect1b,tiles,1))
 				{
 					mPosX = mPosX;
 					rect1a.x = mPosX-1;
@@ -611,7 +672,7 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 					sprite1.x = sprite1.x+f;
 					pointing = -90;
 					keepmovin(tileset);
-					updn();
+					updn(tileset);
 				}
 			}
 			break;
@@ -620,115 +681,31 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 			{
 				nM++;
 				rocketfired = true;
-				if(pointing == 0) //facing down
+				pointing1=pointing;
+				if(pointing==0) //down
 				{
-					pointing1 = 0;
-					rPosY = rPosY+f;
-					rocketrect.y=rocketrect.y+f;
-					if(canbreak(rocketrect,tiles))
-					{
-						frtile(tileset);
-						goback();
-					}
-					else if(iswall(rocketrect,tiles))
-					{
-						rocketstop();
-					}
-					else if(isteleport1(rocketrect,tiles))
-					{
-						telrocket();
-						rPosY = rPosY+f;
-						rocketrect.y=rocketrect.y+f;
-					}
-					else
-					{
-						rPosY = rPosY+f; //keep moving
-						rocketrect.y=rocketrect.y+f;
-					}
+					movement(tileset,0,1);
+					movement(tileset,0,1);
 				}
-				else if(pointing == 90) //facing right
+				if(pointing==-90) //right
 				{
-					pointing1 = 90;
-					rPosX = rPosX-f;
-					rocketrect.x=rocketrect.x-f;
-					if(canbreak(rocketrect,tiles))
-					{
-						frtile(tileset);
-						goback();
-					}
-					else if(iswall(rocketrect,tiles))
-					{
-						rocketstop();
-					}
-					else if(isteleport1(rocketrect,tiles))
-					{
-						telrocket();
-						rPosX = rPosX-f;
-						rocketrect.x=rocketrect.x-f;
-					}
-					else
-					{
-						rPosX = rPosX-f; //keep moving
-						rocketrect.x=rocketrect.x-f;
-					}
+					movement(tileset,1,0);
+					movement(tileset,1,0);
 				}
-				else if(pointing == 180)//facing up
+				if(pointing==180)//up
 				{
-					pointing1 = 180;
-					rPosY = rPosY-f;
-					rocketrect.y=rocketrect.y-f;
-					if(canbreak(rocketrect,tiles))
-					{
-						frtile(tileset);
-						goback();
-					}
-					else if(iswall(rocketrect,tiles))
-					{
-						rocketstop();
-					}
-					else if(isteleport1(rocketrect,tiles))
-					{
-						telrocket();
-						rPosY = rPosY-f;
-						rocketrect.y=rocketrect.y-f;
-					}
-					else
-					{
-						rPosY = rPosY-f; //keep moving
-						rocketrect.y=rocketrect.y-f;
-					}
+					movement(tileset,0,-1);
+					movement(tileset,0,-1);
 				}
-				else //facing left
+				if(pointing==90) //left
 				{
-					pointing1 = -90;
-					rPosX = rPosX+f;
-					rocketrect.x=rocketrect.x+f;
-					if(canbreak(rocketrect,tiles))
-					{
-						frtile(tileset);
-						goback();
-					}
-					else if(iswall(rocketrect,tiles))
-					{
-						rocketstop();
-					}
-					else if(isteleport1(rocketrect,tiles))
-					{
-						telrocket();
-						rPosX = rPosX+f;
-						rocketrect.x=rocketrect.x+f;
-					}
-					else
-					{
-						rPosX = rPosX+f; //keep moving
-						rocketrect.x=rocketrect.x+f;
-					}
+					movement(tileset,-1,0);
+					movement(tileset,-1,0);
 				}
 			}
 			break;
 			case SDLK_r:
 			goback();
-			//reset tilemap somehow
 			break;
 		}
 	}
@@ -736,6 +713,14 @@ void tank::handleEvent(SDL_Event &e, tile* tiles[])
 
 void tank::move(tile* tiles[])
 {
+	SDL_bool sw1 = SDL_HasIntersection(&sprite1, &switc1);
+	SDL_bool sw2 = SDL_HasIntersection(&sprite1, &switc2);
+	SDL_bool sw3 = SDL_HasIntersection(&sprite1, &switc3);
+	SDL_bool cd1 = SDL_HasIntersection(&rocketrect, &switc2);
+	SDL_bool cd2 = SDL_HasIntersection(&rocketrect, &switc3);
+	SDL_bool m11 = SDL_HasIntersection(&mMine1, &sprite1);
+	SDL_bool m22 = SDL_HasIntersection(&mMine2, &sprite1);
+	SDL_bool m33 = SDL_HasIntersection(&mMine3, &sprite1);
 	if(mPosX<0) //too far left
 	{
 		--nM;
@@ -749,7 +734,6 @@ void tank::move(tile* tiles[])
 		rPosX = rPosX;
 		sprite1.x = sprite1.x;
 		sprite1.y = sprite1.y;
-		mMine1.y = mMine1.y - (m*f);
 	}
 	if(mPosY<0) //too far up
 	{
@@ -764,7 +748,6 @@ void tank::move(tile* tiles[])
 		rPosY = rPosY;
 		sprite1.x = sprite1.x;
 		sprite1.y = sprite1.y;
-		mMine1.y = mMine1.y - (m*f);
 	}
 	if(mPosX>1040) // too far right
 	{
@@ -779,7 +762,6 @@ void tank::move(tile* tiles[])
 		rPosX = rPosX;
 		sprite1.x = sprite1.x;
 		sprite1.y = sprite1.y;
-		mMine1.y = mMine1.y - (m*f);
 	}
 	if(mPosY>520) //too far down
 	{
@@ -794,7 +776,6 @@ void tank::move(tile* tiles[])
 		rPosY = rPosY;
 		sprite1.x = sprite1.x;
 		sprite1.y = sprite1.y;
-		mMine1.y = mMine1.y - (m*f);
 	}
 	if((rPosX<0)||(rPosY<0)||(rPosY>520)||(rPosX>1040))
 	{
@@ -804,19 +785,10 @@ void tank::move(tile* tiles[])
 		rocketrect.y=mPosY;
 		rocketfired=false;
 	}
-	if(iswall(rocketrect,tiles))
+	if(iswall(sprite1,tiles,3))
 	{
-		rocketstop();
-	}
-	if(canbreak(rocketrect,tiles))
-	{
-		frtile(tileset);
-		goback();
-	}
-	if(isteleport1(sprite1, tiles))
-	{
-		mPosX = telexit.x;
-		mPosY = telexit.y;
+		mPosX = readmapx("04");
+		mPosY = readmapy("04");
 		rect1a.x = mPosX-1;
 		rect1a.y = mPosY;
 		rect1b.x = mPosX+f;
@@ -825,8 +797,8 @@ void tank::move(tile* tiles[])
 		rect1c.y = mPosY-1;
 		rect1d.x = mPosX;
 		rect1d.y = mPosY+f;
-		sprite1.x = telexit.x;
-		sprite1.y = telexit.y;
+		sprite1.x = readmapx("04");
+		sprite1.y = readmapy("04");
 		if(!rocketfired)
 		{
 			rPosY = mPosY;
@@ -835,18 +807,94 @@ void tank::move(tile* tiles[])
 			rocketrect.y = rPosY;
 		}
 	}
-	while(ismine(sprite1, tiles))
+	if(iswall(sprite1,tiles,7))
+	{
+		mPosX = readmapx("08");
+		mPosY = readmapy("08");
+		rect1a.x = mPosX-1;
+		rect1a.y = mPosY;
+		rect1b.x = mPosX+f;
+		rect1b.y = mPosY;
+		rect1c.x = mPosX;
+		rect1c.y = mPosY-1;
+		rect1d.x = mPosX;
+		rect1d.y = mPosY+f;
+		sprite1.x = readmapx("08");
+		sprite1.y = readmapy("08");
+		if(!rocketfired)
+		{
+			rPosY = mPosY;
+			rPosX = mPosX;
+			rocketrect.x = rPosY;
+			rocketrect.y = rPosY;
+		}
+	}
+	while(iswall(sprite1,tiles,0)||iswall(sprite1,tiles,1)||iswall(sprite1,tiles,5)||iswall(sprite1,tiles,9))
 	{
 		goback();
 	}
-	if(isteleport1(rocketrect, tiles))
-	{
-		telrocket();
-	}
-	if(reachedend(sprite1, tiles))
+	if(iswall(sprite1,tiles,6))
 	{
 		goback();
-		level++;
+	}
+	if(sw1)
+	{
+		cout << "do stuff";
+	}
+	if(sw2||cd1)
+	{
+		if(t2 == true && cc1 == true)
+		{
+			t2 = false;
+			cc1 = false;
+			sweffects1();
+		}
+		else if(t2 == false && cc1 == true)
+		{
+			t2 = true;
+			cc1 = false;
+			sweffects1();
+		}
+		if(clm==0)
+		{
+			clm++;
+		}
+		
+	}
+	if(sw3||cd2)
+	{
+		if(t3 == true && cc2 == true)
+		{
+			t3 = false;
+			cc2 = false;
+			sweffects2();
+		}
+		else if(t3 == false && cc2 == true)
+		{
+			t3 = true;
+			cc2 = false;
+			sweffects2();
+		}
+		if(clm1==0)
+		{
+			clm1++;
+		}
+	}
+	if(!sw2 && !cd1 && !cc1 && (clm>0))
+	{
+		cc1 = true;
+	}
+	if(!sw3 && !cd2 && !cc2 && (clm1>0))
+	{
+		cc2 = true;
+	}
+	if(m11||m22||m33)
+	{
+		goback();
+	}
+	if(!rocketfired && ((rPosX != mPosX)||(rPosY != mPosY)))
+	{
+		rocketstop();
 	}
 }
 
@@ -855,14 +903,42 @@ void tank::render()
 	SDL_RendererFlip flipType = SDL_FLIP_NONE;
 	ROCKET.render(rPosX,rPosY,&spriteClips[1],pointing1,NULL,flipType);
 	TANK.render(mPosX,mPosY,&spriteClips[0],pointing,NULL,flipType);
-	MINE.render(mMine1.x,mMine1.y,&spriteClips[2],still,NULL,flipType);
+	if(findc(17,1) != 0)
+	{
+		MINE.render(mMine1.x,mMine1.y,&spriteClips[2],still,NULL,flipType);
+	}
+	if(findc(25,1) != 0)
+	{
+		MINE.render(mMine2.x,mMine2.y,&spriteClips[2],still,NULL,flipType);
+	}
+	if(findc(33,1) != 0)
+	{
+		MINE.render(mMine3.x,mMine3.y,&spriteClips[2],still,NULL,flipType);
+	}
+	ONE.render(switc1.x,switc1.y,&spriteClips[5],still,NULL,flipType);
 	if(rocketfired)
 	{
-		RFN.render(13*f,0,&spriteClips[4],still,NULL,flipType);
+		RFN.render(15*f,0,&spriteClips[4],still,NULL,flipType);
 	}
 	else
 	{
-		RFY.render(13*f,0,&spriteClips[3],still,NULL,flipType);
+		RFY.render(15*f,0,&spriteClips[3],still,NULL,flipType);
+	}
+	if(t2 == true)
+	{
+		TWOY.render(switc2.x,switc2.y,&spriteClips[6],still,NULL,flipType);
+	}
+	else
+	{
+		TWON.render(switc2.x,switc2.y,&spriteClips[7],still,NULL,flipType);
+	}
+	if(t3 == true)
+	{
+		THREEY.render(switc3.x,switc3.y,&spriteClips[8],still,NULL,flipType);
+	}
+	else
+	{
+		THREEN.render(switc3.x,switc3.y,&spriteClips[9],still,NULL,flipType);
 	}
 }
 
@@ -894,15 +970,21 @@ bool loadMedia(tile* tiles[])
 {
 	bool success = true;
 
-	font = TTF_OpenFont("font.ttf",20);
+	font = TTF_OpenFont("font.ttf",15);
 	SDL_Color textColor = {0,0,0};
-
-	if(!TEXTure.loadFromRenderedText("Level: 1", textColor))
+	string lno = "High Score: " + to_string(findc(6,4)/f);
+	if(!TEXTure.loadFromRenderedText(lno, textColor))
 	{
 		cout << "Failed to render text!" << TTF_GetError() << "||";
 		success = false;
 	}
-
+	font = TTF_OpenFont("font.ttf",20);
+	string lnq = "Level: " + to_string(getlevel());
+	if(!TEXTure1.loadFromRenderedText(lnq, textColor))
+	{
+		cout << "Failed to render text!!" << TTF_GetError() << "||";
+		success = false;
+	}
 	if(!BLOCKS.loadFromFile("grasses.png"))
 	{
 		cout << "Failed to load tile set!||";
@@ -913,7 +995,6 @@ bool loadMedia(tile* tiles[])
 		cout << "Failed to load tile set!||";
 		success = false;
 	}
-
 	if(TANK.loadFromFile("grasses.png"))
 	{
 		spriteClips[0].x = f;
@@ -949,6 +1030,41 @@ bool loadMedia(tile* tiles[])
 		spriteClips[4].w = f;
 		spriteClips[4].h = f;
 	}
+	if(ONE.loadFromFile("grasses.png"))
+	{
+		spriteClips[5].x = 3*f;
+		spriteClips[5].y = 0;
+		spriteClips[5].w = f;
+		spriteClips[5].h = f;
+	}
+	if(TWOY.loadFromFile("grasses.png"))
+	{
+		spriteClips[6].x = 4*f;
+		spriteClips[6].y = 2*f;
+		spriteClips[6].w = f;
+		spriteClips[6].h = f;
+	}
+	if(TWON.loadFromFile("grasses.png"))
+	{
+		spriteClips[7].x = 0;
+		spriteClips[7].y = 3*f;
+		spriteClips[7].w = f;
+		spriteClips[7].h = f;
+	}
+	if(THREEY.loadFromFile("grasses.png"))
+	{
+		spriteClips[8].x = f;
+		spriteClips[8].y = 3*f;
+		spriteClips[8].w = f;
+		spriteClips[8].h = f;
+	}
+	if(THREEN.loadFromFile("grasses.png"))
+	{
+		spriteClips[9].x = 2*f;
+		spriteClips[9].y = 3*f;
+		spriteClips[9].w = f;
+		spriteClips[9].h = f;
+	}
 	return success;
 }
 
@@ -964,9 +1080,19 @@ void exit(tile *tiles[])
 	}
 	TANK.free();
 	TEXTure.free();
+	TEXTure1.free();
 	ROCKET.free();
 	BLOCKS.free();
 	scrtext.free();
+	rtext.free();
+	MINE.free();
+	RFY.free();
+	RFN.free();
+	ONE.free();
+	TWON.free();
+	TWOY.free();
+	THREEN.free();
+	THREEY.free();
 	TTF_CloseFont(font);
 	font = NULL;
 	SDL_DestroyWindow(window);
@@ -986,30 +1112,27 @@ bool checktiles(SDL_Rect A, SDL_Rect B)
 	int Ba, Bb;
 	
 	La = A.x;
-	Ra = A.x+A.w;
+	Ra = A.x+f;
 	Ta = A.y;
-	Ba = A.y+A.h;
+	Ba = A.y+f;
 
 	Lb = B.x;
-	Rb = B.x+B.w;
+	Rb = B.x+f;
 	Tb = B.y;
-	Bb = B.y+B.h;
+	Bb = B.y+f;
 	
     if( Ba <= Tb )
     {
 		return false;
     }
-
     if( Ta >= Bb )
     {
         return false;
     }
-
     if( Ra <= Lb )
     {
         return false;
     }
-
     if( La >= Rb )
     {
         return false;
@@ -1021,7 +1144,7 @@ bool setTiles(tile* tiles[])
 {
 	bool loaded = true;
 	int x = 0,y = 0;
-	ifstream map("map.map");
+	ifstream map(lmap);
     if(map.fail())
     {
 		cout << "Unable to load map file!||";
@@ -1037,7 +1160,7 @@ bool setTiles(tile* tiles[])
         loaded = false;
 		break;
         }
-		if((type >= 0) && (type < 7))
+		if((type >= 0) && (type < 10))
 		{
 			tiles[i] = new tile(x,y,type);
 		}
@@ -1066,8 +1189,8 @@ bool setTiles(tile* tiles[])
 		tileclips[UNBREAKABLE].w = f;
 		tileclips[UNBREAKABLE].h = f;
 		
-		tileclips[BLANK].x = 3*f;
-		tileclips[BLANK].y = 0;
+		tileclips[BLANK].x = 4*f;
+		tileclips[BLANK].y = 3*f;
 		tileclips[BLANK].w = f;
 		tileclips[BLANK].h = f;
 		
@@ -1090,36 +1213,31 @@ bool setTiles(tile* tiles[])
 		tileclips[EXIT].y = 2*f;
 		tileclips[EXIT].w = f;
 		tileclips[EXIT].h = f;
-/*
-		tileclips[TELEPORTER3a].x = 4*f;
-		tileclips[TELEPORTER3a].y = 0;
-		tileclips[TELEPORTER3a].w = f;
-		tileclips[TELEPORTER3a].h = f;
+		
+		tileclips[TELEPORTER2a].x = 2*f;
+		tileclips[TELEPORTER2a].y = f;
+		tileclips[TELEPORTER2a].w = f;
+		tileclips[TELEPORTER2a].h = f;
 
-		tileclips[TELEPORTER3b].x = f;
-		tileclips[TELEPORTER3b].y = f;
-		tileclips[TELEPORTER3b].w = f;
-		tileclips[TELEPORTER3b].h = f;
+		tileclips[TELEPORTER2b].x = 4*f;
+		tileclips[TELEPORTER2b].y = f;
+		tileclips[TELEPORTER2b].w = f;
+		tileclips[TELEPORTER2b].h = f;
 
-		tileclips[TELEPORTER4a].x = 4*f;
-		tileclips[TELEPORTER4a].y = 0;
-		tileclips[TELEPORTER4a].w = f;
-		tileclips[TELEPORTER4a].h = f;
-
-		tileclips[TELEPORTER4b].x = f;
-		tileclips[TELEPORTER4b].y = f;
-		tileclips[TELEPORTER4b].w = f;
-		tileclips[TELEPORTER4b].h = f; */
+		tileclips[KILYOU].x = 3*f;
+		tileclips[KILYOU].y = 3*f;
+		tileclips[KILYOU].w = f;
+		tileclips[KILYOU].h = f;
 	}
 	map.close();
 	return loaded;
 }
 
-bool iswall(SDL_Rect input1, tile* tiles[])
+bool iswall(SDL_Rect input1, tile* tiles[], int fType)
 {
 	for(int i=0;i<noTiles;++i) //go through all the tiles
     {
-        if((tiles[i]->gType() < 2))
+        if((tiles[i]->gType() == fType))
         {
             if(checktiles(input1, tiles[i]->gBlock()))
             {
@@ -1130,71 +1248,11 @@ bool iswall(SDL_Rect input1, tile* tiles[])
 	return false;
 }
 
-bool canbreak(SDL_Rect input5, tile* tiles[])
-{
-	for(int i=0;i<noTiles;++i) //go through all the tiles
-    {
-        if((tiles[i]->gType() == 1))
-        {
-            if(checktiles(input5, tiles[i]->gBlock()))
-            {
-				return true; //colliding
-            }
-		}
-	}
-	return false;
-}
-
-bool isteleport1(SDL_Rect input2, tile* tiles[])
-{
-	for(int i=0;i<noTiles;++i) //go through all the tiles
-    {
-        if((tiles[i]->gType() == 3))
-        {
-            if(checktiles(input2, tiles[i]->gBlock()))
-            {
-				return true; //colliding
-            }
-		}
-	}
-	return false;
-}
-
-bool ismine(SDL_Rect input3, tile* tiles[])
-{
-	for(int i=0;i<noTiles;++i)
-	{
-		if((tiles[i]->gType() == 5))
-		{
-			if(checktiles(input3, tiles[i]->gBlock()))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-bool reachedend(SDL_Rect input4, tile* tiles[])
-{
-	for(int i=0;i<noTiles;++i)
-	{
-		if((tiles[i]->gType() == 6))
-		{
-			if(checktiles(input4, tiles[i]->gBlock()))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
 int main(int argc,char* args[])
 {
 	stringstream scr;
+	stringstream rl;
 	SDL_Color textColor = {0,0,0,255};
-
 	if(!init())
 	{
 		cout <<  "Failed to initialize!||";
@@ -1214,7 +1272,7 @@ int main(int argc,char* args[])
 				{
 					if(e.type==SDL_QUIT)
 					{
-						//delete the temp tilemap
+						reset();
 						quit = true;
 					}
 					tank.handleEvent(e,tileset);
@@ -1229,9 +1287,16 @@ int main(int argc,char* args[])
 				scr.str(" ");
 				int cm = nM;
 				scr << "Moves: " << cm;
+				rl.str(" ");
+				int dz = cd;
+				rl << "Rockets: " << dz;
 				if(!scrtext.loadFromRenderedText(scr.str().c_str(), textColor))
 				{
-					cout << "score issue ||" << endl;
+					cout << "score issue ||";
+				}
+				if(!rtext.loadFromRenderedText(rl.str().c_str(), textColor))
+				{
+					cout << "score issue ||";
 				}
 
 				for(int i = 0;i < noTiles;++i)
@@ -1241,7 +1306,13 @@ int main(int argc,char* args[])
 				
 				tank.render();
 				scrtext.render(5,5);
-				TEXTure.render(910,5);
+				if((findc(6,4)/f) < 9999)
+				{
+					TEXTure.render(840,3);
+				}
+				TEXTure1.render(900,530);
+				rtext.render(200,4);
+				
 				SDL_SetRenderDrawColor( renderer, 0xFF, 0x00, 0x00, 0xFF );		
 
 				SDL_RenderPresent(renderer);
