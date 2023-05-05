@@ -1,1 +1,7 @@
-level,01
+01,C,9999,01,10,2,99,99,0,99,99,0,02,02,04,04,00,06,15
+02,U,9999,01,10,1,00,00,0,00,00,0,02,02,04,04,00,06,00
+03,U,9999,01,10,1,00,00,0,00,00,0,02,02,04,04,00,06,00
+04,U,9999,01,10,1,00,00,0,00,00,0,02,02,04,04,00,06,00
+||store other levels here
+||format:<level no>,<completed>,<least moves>,<xpos>,<ypos>,<direction of movement>,<xpos>,<ypos>,<direction of movement>,<xpos>,<ypos>,<direction of movement>,<xpos>,<ypos>,<xpos>,<ypos>,<xpos>,<ypos>,
+||moving mines 1, 2, 3, switches 1, 2, 3
