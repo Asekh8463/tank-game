@@ -10,13 +10,16 @@
 
 #include "cons.hpp"
 
+using namespace std;
+
 class tank
 {
 	public:
 	void stop();
 	void rocketstop();
 	void goback();
-	void telrocket(SDL_Rect objct, std::string id);
+	void telrocket(string id);
+	void telmine(SDL_Rect objct, string id);
 	void movement(tile* tiles[],int lx,int ly);
 	void keepmovin(tile* tiles[]);
 	tank();

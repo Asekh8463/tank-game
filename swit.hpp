@@ -1,13 +1,9 @@
 #pragma once
 
 #include <SDL.h>
-#include <SDL_image.h>
 #include <iostream>
 #include <string>
-#include <cmath>
 #include <sstream>
-#include <fstream>
-#include <limits>
 
 #include "cons.hpp"
 #include "filerw.hpp"
@@ -31,7 +27,14 @@ void sweffects()
 	switch(getlevel())
 	{
 		case 1:
-		cout << "nah";
+		if(ftile(3,22)==1)
+		{
+			frtile(tileset, '2', tx(22), ty(3));
+		}
+		else
+		{
+			frtile(tileset, '1', tx(22), ty(3));
+		}
 		break;
 	}
 }
@@ -41,13 +44,19 @@ void sweffects1()
 	switch(getlevel())
 	{
 		case 1:
-		if(ftile(10,13)==6)
+		if(ftile(11,22)==1)
 		{
-			frtile(tileset,'2',tx(13),ty(10));
+			for(int i=10; i<14; ++i)
+			{
+				frtile(tileset,'2',tx(13),ty(i));
+			}
 		}
 		else
 		{
-			frtile(tileset,'6',tx(13),ty(10));
+			for(int i=10; i<14; ++i)
+			{
+				frtile(tileset,'1',tx(13),ty(i));
+			}
 		}
 		break;
 	}
@@ -58,14 +67,7 @@ void sweffects2()
 	switch(getlevel())
 	{
 		case 1:
-		if(ftile(10,13)==6)
-		{
-			frtile(tileset,'2',tx(13),ty(10));
-		}
-		else
-		{
-			frtile(tileset,'6',tx(13),ty(10));
-		}
+		cout << "nothin"
 		break;
 	}
 }

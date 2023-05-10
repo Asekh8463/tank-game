@@ -1,4 +1,3 @@
-//done!
 //level selection
 //and planning
 
@@ -12,6 +11,7 @@
 #include <fstream>
 #include <limits>
 
+#include "rect.hpp"
 #include "map.hpp"
 #include "texture.hpp"
 #include "tank.hpp"
@@ -22,34 +22,10 @@
 using namespace std;
 
 const Uint8* state = SDL_GetKeyboardState(nullptr);
-
-int cd = findc(53,2)/f;
 int nM = 0;
 
-double pointing = 0.0;
-double pointing1 = 0.0;
-
-bool rocketfired;
-
-SDL_Rect sprite1;
-SDL_Rect rect1a;
-SDL_Rect rect1b;
-SDL_Rect rect1c;
-SDL_Rect rect1d;
-SDL_Rect rocketrect;
-
-SDL_Rect mMine1 = {findc(11,2),findc(14,2),f,f};
-SDL_Rect mMine2 = {findc(19,2),findc(22,2),f,f};
-SDL_Rect mMine3 = {findc(27,2),findc(30,2),f,f};
-SDL_Rect switc1 = {findc(35,2),findc(38,2),f,f};
-SDL_Rect switc2 = {findc(41,2),findc(44,2),f,f};
-SDL_Rect switc3 = {findc(47,2),findc(50,2),f,f};
-int mx1 = findc(11,2);
-int my1 = findc(14,2);
-int mx2 = findc(19,2);
-int my2 = findc(22,2);
-int mx3 = findc(27,2);
-int my3 = findc(30,2);
+int pointing = 0;
+int pointing1 = 0;
 
 SDL_bool mm1 = SDL_HasIntersection(&rocketrect, &mMine1);
 SDL_bool mm2 = SDL_HasIntersection(&rocketrect, &mMine2);
@@ -155,7 +131,7 @@ void tank::goback()
 	switc2.y = findc(44,2);
 	switc3.x = findc(47,2);
 	switc3.y = findc(50,2);
-	pointing = 0.0;
+	pointing = 0;
 	rPosX=startx;
 	rPosY=starty;
 	rocketrect.x=startx;
@@ -163,33 +139,56 @@ void tank::goback()
 	reset();
 }
 
-void tank::telrocket(SDL_Rect objct,string id)
+void tank::telrocket(string id)
+{
+	int x11 = readmapx(id);
+	int y11 = readmapy(id);
+	rPosX = x11;
+	rPosY = y11;
+	rocketrect.x = x11;
+	rocketrect.y = y11;
+	if(pointing1==0) //down
+	{
+		movement(tileset,0,1);
+		movement(tileset,0,1);
+	}
+	if(pointing1==-90) //right
+	{
+		movement(tileset,1,0);
+		movement(tileset,1,0);
+	}
+	if(pointing1==180)//up
+	{
+		movement(tileset,0,-1);
+		movement(tileset,0,-1);
+	}
+	if(pointing1==90) //left
+	{
+		movement(tileset,-1,0);
+		movement(tileset,-1,0);
+	}
+}
+
+void tank::telmine(SDL_Rect objct, string id)
 {
 	int x11 = readmapx(id);
 	int y11 = readmapy(id);
 	objct.x = x11;
 	objct.y = y11;
-	if((rocketrect.x!=sprite1.x)||(rocketrect.y!=sprite1.y))
+	if(x11 == mMine1.x)
 	{
-		if(sprite1.x-rocketrect.x==f||sprite1.y-rocketrect.y==f)
-		{
-			if(pointing1==0) //down
-			{
-				movement(tileset,0,1);
-			}
-			if(pointing1==-90) //right
-			{
-				movement(tileset,1,0);
-			}
-			if(pointing1==180)//up
-			{
-				movement(tileset,0,-1);
-			}
-			if(pointing1==90) //left
-			{
-				movement(tileset,-1,0);
-			}
-		}
+		mx1 = objct.x;
+		my1 = objct.y;
+	}
+	else if(x11 == mMine2.x)
+	{
+		mx2 = objct.x;
+		my2 = objct.y;
+	}
+	else if(x11 == mMine3.x)
+	{
+		mx3 = objct.x;
+		my3 = objct.y;
 	}
 }
 
@@ -242,7 +241,7 @@ void aTexture::free()
 	mH = 0;
 }
 
-void aTexture::render(int x,int y,SDL_Rect* clip,double angle,SDL_Point* center,SDL_RendererFlip flip)
+void aTexture::render(int x,int y,SDL_Rect* clip,int angle,SDL_Point* center,SDL_RendererFlip flip)
 {
 	SDL_Rect renderQuad = {x,y,mW,mH};
 	if(clip != NULL)
@@ -343,11 +342,11 @@ void tank::updn(tile* tiles[])
 				}
 				if(iswall(mMine1,tiles,3))
 				{
-					telrocket(mMine1,"04");
+					telmine(mMine1,"04");
 				}
 				if(iswall(mMine1,tiles,7))
 				{
-					telrocket(mMine1,"08");
+					telmine(mMine1,"08");
 				}
 			break;
 			case 80:
@@ -362,11 +361,11 @@ void tank::updn(tile* tiles[])
 				}
 				if(iswall(mMine1,tiles,3))
 				{
-					telrocket(mMine1,"04");
+					telmine(mMine1,"04");
 				}
 				if(iswall(mMine1,tiles,7))
 				{
-					telrocket(mMine1,"08");
+					telmine(mMine1,"08");
 				}
 			break;
 		}
@@ -387,11 +386,11 @@ void tank::updn(tile* tiles[])
 			}
 			if(iswall(mMine2,tiles,3))
 			{
-				telrocket(mMine2,"04");
+				telmine(mMine2,"04");
 			}
 			if(iswall(mMine2,tiles,7))
 			{
-				telrocket(mMine2,"08");
+				telmine(mMine2,"08");
 			}
 
 			break;
@@ -407,11 +406,11 @@ void tank::updn(tile* tiles[])
 			}
 			if(iswall(mMine2,tiles,3))
 			{
-				telrocket(mMine2,"04");
+				telmine(mMine2,"04");
 			}
 			if(iswall(mMine2,tiles,7))
 			{
-				telrocket(mMine2,"08");
+				telmine(mMine2,"08");
 			}
 			break;
 		}
@@ -432,11 +431,11 @@ void tank::updn(tile* tiles[])
 			}
 			if(iswall(mMine3,tiles,3))
 			{
-				telrocket(mMine3,"04");
+				telmine(mMine3,"04");
 			}
 			if(iswall(mMine3,tiles,7))
 			{
-				telrocket(mMine3,"08");
+				telmine(mMine3,"08");
 			}
 			break;
 			case 80:
@@ -451,11 +450,11 @@ void tank::updn(tile* tiles[])
 			}
 			if(iswall(mMine3,tiles,3))
 			{
-				telrocket(mMine3,"04");
+				telmine(mMine3,"04");
 			}
 			if(iswall(mMine3,tiles,7))
 			{
-				telrocket(mMine3,"08");
+				telmine(mMine3,"08");
 			}
 			break;
 		}
@@ -474,6 +473,7 @@ void tank::movement(tile* tiles[],int lx,int ly)
 		{
 			frtile(tileset,'2',rocketrect.x,rocketrect.y);
 			--cd;
+			rocketstop();
 		}
 		else
 		{
@@ -487,11 +487,11 @@ void tank::movement(tile* tiles[],int lx,int ly)
 	}
 	else if(iswall(rocketrect,tiles,3))
 	{
-		telrocket(rocketrect,"04");
+		telrocket("04");
 	}
 	else if(iswall(rocketrect,tiles,7))
 	{
-		telrocket(rocketrect,"08");
+		telrocket("08");
 	}
 	else
 	{
@@ -505,11 +505,11 @@ void tank::movement(tile* tiles[],int lx,int ly)
 		}
 		if(iswall(rocketrect,tiles,7))
 		{
-			telrocket(rocketrect,"08");
+			telrocket("08");
 		}
 		if(iswall(rocketrect,tiles,3))
 		{
-			telrocket(rocketrect,"04");
+			telrocket("04");
 		}
 		if(iswall(rocketrect,tiles,5)||iswall(rocketrect,tiles,1))
 		{
@@ -517,6 +517,7 @@ void tank::movement(tile* tiles[],int lx,int ly)
 			{
 				frtile(tileset,'2',rocketrect.x,rocketrect.y);
 				--cd;
+				rocketstop();
 			}
 			else
 			{
@@ -716,11 +717,13 @@ void tank::move(tile* tiles[])
 	SDL_bool sw1 = SDL_HasIntersection(&sprite1, &switc1);
 	SDL_bool sw2 = SDL_HasIntersection(&sprite1, &switc2);
 	SDL_bool sw3 = SDL_HasIntersection(&sprite1, &switc3);
-	SDL_bool cd1 = SDL_HasIntersection(&rocketrect, &switc2);
-	SDL_bool cd2 = SDL_HasIntersection(&rocketrect, &switc3);
 	SDL_bool m11 = SDL_HasIntersection(&mMine1, &sprite1);
 	SDL_bool m22 = SDL_HasIntersection(&mMine2, &sprite1);
 	SDL_bool m33 = SDL_HasIntersection(&mMine3, &sprite1);
+	SDL_bool aa1 = SDL_HasIntersection(&rocketrect, &l1);
+	SDL_bool ac1 = SDL_HasIntersection(&rocketrect, &u1);
+	SDL_bool aa2 = SDL_HasIntersection(&rocketrect, &l2);
+	SDL_bool ac2 = SDL_HasIntersection(&rocketrect, &u2);
 	if(mPosX<0) //too far left
 	{
 		--nM;
@@ -841,7 +844,7 @@ void tank::move(tile* tiles[])
 	{
 		cout << "do stuff";
 	}
-	if(sw2||cd1)
+	if(sw2||(rocketfired && aa1)||(rocketfired && ac1))
 	{
 		if(t2 == true && cc1 == true)
 		{
@@ -861,7 +864,7 @@ void tank::move(tile* tiles[])
 		}
 		
 	}
-	if(sw3||cd2)
+	if(sw3||(rocketfired && aa2)||(rocketfired && ac2))
 	{
 		if(t3 == true && cc2 == true)
 		{
@@ -880,11 +883,11 @@ void tank::move(tile* tiles[])
 			clm1++;
 		}
 	}
-	if(!sw2 && !cd1 && !cc1 && (clm>0))
+	if(!sw2 && !aa1 && !ac1 && !cc1 && (clm>0))
 	{
 		cc1 = true;
 	}
-	if(!sw3 && !cd2 && !cc2 && (clm1>0))
+	if(!sw3 && !aa2 && !ac2 && !cc2 && (clm1>0))
 	{
 		cc2 = true;
 	}
@@ -893,6 +896,10 @@ void tank::move(tile* tiles[])
 		goback();
 	}
 	if(!rocketfired && ((rPosX != mPosX)||(rPosY != mPosY)))
+	{
+		rocketstop();
+	}
+	if(!rocketfired && ((rocketrect.x != mPosX)||rocketrect.y != mPosY))
 	{
 		rocketstop();
 	}
@@ -1250,6 +1257,7 @@ bool iswall(SDL_Rect input1, tile* tiles[], int fType)
 
 int main(int argc,char* args[])
 {
+	reset();
 	stringstream scr;
 	stringstream rl;
 	SDL_Color textColor = {0,0,0,255};
@@ -1305,15 +1313,15 @@ int main(int argc,char* args[])
 				}
 				
 				tank.render();
-				scrtext.render(5,5);
+				scrtext.render(STATIC_MINE,STATIC_MINE);
 				if((findc(6,4)/f) < 9999)
 				{
 					TEXTure.render(840,3);
 				}
 				TEXTure1.render(900,530);
-				rtext.render(200,4);
+				rtext.render(210,STATIC_MINE);
 				
-				SDL_SetRenderDrawColor( renderer, 0xFF, 0x00, 0x00, 0xFF );		
+				SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);		
 
 				SDL_RenderPresent(renderer);
 			}

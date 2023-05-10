@@ -8,7 +8,7 @@ const int f = 40;
 const int noTiles = 378;
 const int startx = 25*f;
 const int starty = f;
-const double still = 0.0;
+const int still = 0;
 const int BREAKABLE = 0;
 const int UNBREAKABLE = 1;
 const int BLANK = 2;
@@ -25,12 +25,20 @@ int m1 = -2;
 int m2 = -2;
 int clm = 0;
 int clm1 = 0;
+bool rocketfired;
 //switches and mines, idk
 bool t1 = false;
 bool t2 = false;
 bool t3 = false;
 bool cc1 = true;
 bool cc2 = true;
+//rects
+SDL_Rect sprite1;
+SDL_Rect rect1a;
+SDL_Rect rect1b;
+SDL_Rect rect1c;
+SDL_Rect rect1d;
+SDL_Rect rocketrect;
 //misc
 const char isc = 'C';
 tile* tileset[noTiles];
