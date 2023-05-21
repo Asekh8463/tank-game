@@ -27,13 +27,22 @@ void sweffects()
 	switch(getlevel())
 	{
 		case 1:
-		if(ftile(3,22)==1)
+		if((ftile(11,4)==0))
 		{
-			frtile(tileset, '2', tx(22), ty(3));
+			frtile(tileset,'2',tx(4),ty(11));
 		}
-		else
+		break;
+	}
+}
+
+void unsweffects()
+{
+	switch(getlevel())
+	{
+		case 1:
+		if((ftile(11,4)==2))
 		{
-			frtile(tileset, '1', tx(22), ty(3));
+			frtile(tileset,'0',tx(4),ty(11));
 		}
 		break;
 	}
@@ -44,18 +53,18 @@ void sweffects1()
 	switch(getlevel())
 	{
 		case 1:
-		if(ftile(11,22)==1)
+		if(ftile(3,22)==0)
 		{
-			for(int i=10; i<14; ++i)
+			for(int i=3; i<5; ++i)
 			{
-				frtile(tileset,'2',tx(13),ty(i));
+				frtile(tileset,'2',tx(22),ty(i));
 			}
 		}
 		else
 		{
-			for(int i=10; i<14; ++i)
+			for(int i=3; i<5; ++i)
 			{
-				frtile(tileset,'1',tx(13),ty(i));
+				frtile(tileset,'0',tx(22),ty(i));
 			}
 		}
 		break;
@@ -67,7 +76,20 @@ void sweffects2()
 	switch(getlevel())
 	{
 		case 1:
-		cout << "nothin"
+		if(ftile(12,22)==0)
+		{
+			for(int i=12; i<15; ++i)
+			{
+				frtile(tileset,'2',tx(22),ty(i));
+			}
+		}
+		else
+		{
+			for(int i=12; i<15; ++i)
+			{
+				frtile(tileset,'0',tx(22),ty(i));
+			}
+		}
 		break;
 	}
 }

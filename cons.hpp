@@ -4,7 +4,7 @@
 
 //VERY IMPORTANT!!!!!!!!!!
 const int f = 40;
-/* also important*/
+//also important
 const int noTiles = 378;
 const int startx = 25*f;
 const int starty = f;

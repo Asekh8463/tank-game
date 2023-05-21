@@ -1,3 +1,4 @@
+#pragma once
 #include <SDL.h>
 #include <iostream>
 
@@ -20,8 +21,12 @@ SDL_Rect switc1 = {findc(35,2),findc(38,2),f,f};
 SDL_Rect switc2 = {findc(41,2),findc(44,2),f,f};
 SDL_Rect switc3 = {findc(47,2),findc(50,2),f,f};
 
-SDL_Rect l1 = {switc2.x-f,switc2.y,3*f,f};
-SDL_Rect u1 = {switc2.x,switc2.y-f,f,3*f};
+SDL_Rect l1 = {switc2.x-f,switc2.y,f,f};
+SDL_Rect r1 = {switc2.x+f,switc2.y,f,f};
+SDL_Rect d1 = {switc2.x,switc2.y+f,f,f};
+SDL_Rect u1 = {switc2.x,switc2.y-f,f,f};
 
-SDL_Rect l2 = {switc3.x-f,switc3.y,3*f,f};
-SDL_Rect u2 = {switc3.x,switc3.y-f,f,3*f};
+SDL_Rect l2 = {switc3.x-f,switc3.y,f,f};
+SDL_Rect r2 = {switc3.x+f,switc3.y,f,f};
+SDL_Rect d2 = {switc3.x,switc3.y+f,f,f};
+SDL_Rect u2 = {switc3.x,switc3.y-f,f,f};

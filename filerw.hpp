@@ -11,7 +11,7 @@ using namespace std;
 int getlevel()
 {
 	int aX = 1;
-	string yl = to_string(isc);
+	string yl = "C";
 	unsigned int wline = 0;
 	string datas;
 	ifstream mapFile("levels/stats.txt");
@@ -27,8 +27,23 @@ int getlevel()
 	return aX;
 }
 
-string lmap = "levels/map" + to_string(getlevel()) + ".map";
-string bmap = "levels/basemap" + to_string(getlevel()) + ".map";
+string lmap()
+{
+	string td2 = "levels/map" + to_string(getlevel()) + ".map";
+	return td2;
+}
+
+string bmap()
+{
+	string td1 = "levels/basemap" + to_string(getlevel()) + ".map";
+	return td1;
+}
+
+string lnq()
+{
+	string q1 = "Level: " + to_string(getlevel());
+	return q1;
+}
 
 int findc(int p, int w)
 {
@@ -53,8 +68,8 @@ int findc(int p, int w)
 
 void reset()
 {
-	ifstream bMap(bmap);
-	ofstream mapFile(lmap);
+	ifstream bMap(bmap());
+	ofstream mapFile(lmap());
 	string tc;
 	while(getline(bMap, tc))
 	{
@@ -69,7 +84,7 @@ void frtile(tile *tiles[], char r, int valx, int valy)
 	int lne = ((valx/f)*3)+1;
 	int lnp = (valy/f)+1;
 	int pos;
-	fstream mapFile(lmap);
+	fstream mapFile(lmap());
 	pos = (82*(lnp-1))+lne;
 	mapFile.seekp(pos, ios::beg); //go to wherever
 	mapFile << r;
@@ -81,7 +96,7 @@ int readmapy(string usc)
 	unsigned int wline = -1;
 	int aX = -1;
 	string datas;
-	ifstream mapFile(lmap);
+	ifstream mapFile(lmap());
 	while(getline(mapFile, datas))
 	{
 		wline++;
@@ -98,7 +113,7 @@ int readmapx(string usc)
 {
 	int aY;
 	string datas;
-	ifstream mapFile(lmap);
+	ifstream mapFile(lmap());
 	for(int i=1; i <= ((readmapy(usc)/f)+1); i++)
 	{
 		getline(mapFile, datas);
@@ -118,45 +133,42 @@ int readmapx(string usc)
 
 void clevel(int mov)
 {
-	int bl;
 	int posb = getlevel()-1;
-	int bk = (getlevel()*56)+4;
-	fstream mapFile("stats.txt");
+	int bl = (posb*56)+5;
+	int bk = (getlevel()*56)+3;
+	fstream mapFile("levels/stats.txt");
 	if(mov<(findc(6,4)/f))
 	{
 		if(mov<10)
 		{
-			bl = (posb*56)+9;
-			mapFile.seekg(posb, ios::beg);
-			mapFile << mov;
+			mapFile.seekp(bl, ios::beg);
+			mapFile << "000" << to_string(mov);
 		}
 		else if(mov<100)
 		{
-			bl = (posb*56)+8;
-			mapFile.seekg(posb, ios::beg);
-			mapFile << mov;
+			mapFile.seekp(bl, ios::beg);
+			mapFile << "00" << to_string(mov);
 		}
 		else if(mov<1000)
 		{
-			bl = (posb*56)+7;
-			mapFile.seekg(posb, ios::beg);
-			mapFile << mov;
+			mapFile.seekp(bl, ios::beg);
+			mapFile << "0" << to_string(mov);
 		}
 		else if(mov<10000)
 		{
-			bl = (posb*56)+6;
-			mapFile.seekg(posb, ios::beg);
-			mapFile << mov;
+			mapFile.seekp(bl, ios::beg);
+			mapFile << to_string(mov);
 		}
 		else
 		{
-			bl = (posb*56)+6;
-			mapFile.seekg(posb, ios::beg);
+			mapFile.seekp(bl, ios::beg);
 			mapFile << "9999";
 		}
 	}
-	mapFile.seekg(bk, ios::beg);
-	mapFile << isc;
+	mapFile.seekp(bk, ios::beg);
+	mapFile << "C";
+//	lmap = "levels/map" + to_string(getlevel()) + ".map";
+//	bmap = "levels/basemap" + to_string(getlevel()) + ".map";
 }
 
 int ftile(int ent, int entl)
@@ -165,7 +177,7 @@ int ftile(int ent, int entl)
 	string lvl;
 	string xz;
 	unsigned int wline = 0;
-	ifstream mapFile(lmap);
+	ifstream mapFile(lmap());
 	while(getline(mapFile, lvl))
 	{
 		wline++;
